@@ -1,0 +1,194 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <meta charset="UTF-8">
+  <title>日報打刻ツール</title>
+</head>
+<style>
+  body {
+    font-family: sans-serif;
+    padding: 10px;
+    max-width: 500px;
+    margin: auto;
+  }
+
+  label {
+    display: block;
+    margin-top: 10px;
+    font-weight: bold;
+  }
+
+  select, button {
+    width: 100%;
+    padding: 10px;
+    font-size: 16px;
+    margin-top: 5px;
+  }
+
+  button {
+    margin-top: 10px;
+    background-color: #0084ff;
+    color: white;
+    border: none;
+    border-radius: 5px;
+  }
+
+  #status {
+    margin-top: 15px;
+    font-weight: bold;
+    color: green;
+  }
+</style>
+
+
+<body>
+  <h2>日報打刻</h2>
+
+  <label>所属：</label>
+  <select id="department">
+    <option value="品川1">品川1</option>
+    <option value="品川2">品川2</option>
+    <option value="東松山">東松山</option>
+    <option value="市川">市川</option>
+  </select><br><br>
+
+  <label>氏名：</label>
+  <select id="name"></select><br><br>
+
+  <label>車番：</label>
+  <select id="car"></select><br><br>
+
+  <button onclick="record('出勤')">出勤</button>
+  <button onclick="record('始業時刻')">始業時刻</button>
+  <button onclick="record('休憩開始')">休憩開始</button>
+  <button onclick="record('休憩終了')">休憩終了</button>
+  <button onclick="record('終業時刻')">終業時刻</button>
+  <button onclick="record('退勤')">退勤</button>
+
+  <p id="status"></p>
+
+  <script>
+    const membersByDepartment = {
+      "品川1": [ "小松 秀夫", "髙子 康雄", "斎藤 豊正", "川島 紀之", "猪熊 光一郎", "瀬名波 聖史", "伊藤 素直", "大谷 雄次郎", "前田 直光", "岡本 健一", "佐々木 俊輔", "塩島 慶太", "堀内 ｼﾞｮﾝﾏｲｹﾙｵｰ", "江川 康広", "小林 力", "高橋 正記", "鈴木 孝政", "甲斐 慧", "安川 実来", "根本 拓", "大川 寛智", "久野 森哉", "畑中 翔太", "岩﨑 拓哉", "新谷 昌平"],
+      "品川2": ["宮沢 和男", "浜島 幸一", "斎藤 豊正", "櫻本 章", "藤本 順一", "野中 康行", "伊藤 素直", "大谷 雄次郎", "西村 晶", "池田 健二郎"],
+      "東松山": ["柿沼 富明", "石川 重一", "福田 成代", "細井 昭", "西 忠臣", "坂上 昌彦", "木部 重幸", "鈴木 純一", "加藤 実", "本田 利雄", "浅利 努", "今井 哲士", "山本 修二", "遠藤 智也", "松岡 穂", "橋本 蓮", "竹内 勇人", "武内 洸稀"],
+      "市川": ["原田 悦二", "向井 あき子", "福島 雄一", "永尾 和敏", "御厨 隆夫", "吉海江 隆", "寒河江 紀之", "伊藤 裕一", "阿部 瞳", "伊澤 輝祥", "永井 芳弘", "安部 啓之", "小林 慎", "高橋 広樹", "阿部 秀弥", "前田 隆大", "朝日 晟矢", "森嶋 渉", "中山 昇", "近藤 雅行", "横内 あゆみ", "阿部 ひろみ"]
+    };
+
+    const carsByDepartment = {
+      "品川1": ["品川400 い 2783", "品川400 い 2864", "品川400 い 2866", "品川400 い 3167", "品川400 い 3378", "品川400 い 3490", "品川400 い 3583", "品川400 い 3601", "品川400 い 3700", "品川400 い 3731", "品川400 い 3784", "品川400 い 4146", "品川400 い 4239", "品川400 い 4217", "品川400 い 4398", "品川400 い 4545", "品川400 い 4657", "品川400 い 4671", "品川400 い 4719", "品川400 い 4769", "品川400 い 4778"],
+      "品川2": ["品川130 け 9999", "品川101 あ 132", "品川101 あ 435", "品川101 あ 1363", "品川101 あ 4669", "品川101 あ 5888", "品川101 あ 5903", "品川101 あ 5919", "品川101 あ 7488", "品川101 あ 6838", "品川101 あ 8245", "品川101 あ 8331", "品川130 あ 3222", "品川400 い 4224", "品川130 う 9999"],
+      "東松山": ["熊谷132 あ 27", "熊谷100 い 1725", "熊谷400 あ 2395", "熊谷100 い 6024", "熊谷100 い 6025", "熊谷100 い 6106", "熊谷100 い 6277", "熊谷100 い 6503", "熊谷100 い 7405", "熊谷100 い 7430", "熊谷100 い 7699", "熊谷100 い 7899", "熊谷100 い 8762", "熊谷100 か 9525", "熊谷100 か 9787", "熊谷100 か 9966"],
+      "市川": ["市川400 あ 161", "市川400 あ 163", "市川400 あ 174", "市川110 あ 241", "市川110 あ 277", "市川110 あ 278", "市川100 あ 767", "市川100 あ 768", "市川100 あ 832", "市川110 あ 3544", "市川110 あ 4193", "市川110 あ 6109", "市川110 あ 7072", "市川110 あ 7097", "市川110 あ 7629"]
+    };
+
+    function updateForm() {
+      const dept = document.getElementById("department").value;
+
+      // 氏名更新
+      const nameSelect = document.getElementById("name");
+      nameSelect.innerHTML = "";
+      (membersByDepartment[dept] || []).forEach(name => {
+        const option = document.createElement("option");
+        option.value = name;
+        option.textContent = name;
+        nameSelect.appendChild(option);
+      });
+
+      // 車番更新
+      const carSelect = document.getElementById("car");
+      carSelect.innerHTML = "";
+      (carsByDepartment[dept] || []).forEach(car => {
+        const option = document.createElement("option");
+        option.value = car;
+        option.textContent = car;
+        carSelect.appendChild(option);
+      });
+    }
+
+    window.onload = function () {
+      updateForm();
+      document.getElementById("department").addEventListener("change", updateForm);
+    };
+
+    function record(type) {
+      const name = document.getElementById("name").value;
+      const department = document.getElementById("department").value;
+      const car = document.getElementById("car").value;
+      const now = new Date().toLocaleString();
+
+      document.getElementById("status").innerText = `${type} を記録中...`;
+
+      if (navigator.geolocation) {
+        navigator.geolocation.getCurrentPosition(function(pos) {
+          const lat = pos.coords.latitude;
+          const lng = pos.coords.longitude;
+
+          const data = {
+            name,
+            department,
+            car,
+            type,
+            timestamp: now,
+            latitude: lat,
+            longitude: lng
+          };
+
+          document.getElementById("status").innerText = `✅ ${type} 打刻完了 (${now})`;
+
+          fetch("https://script.google.com/macros/s/1krV0E-G6W5ehK7RaFldrcB4IESrT1dLrHdPZiIIVFoA/exec", {
+            method: "POST",
+         
+            headers: {
+              "Content-Type": "application/json"
+            },
+            body: JSON.stringify(data)
+          });
+
+        }, () => {
+          alert("❌ 位置情報の取得に失敗しました。");
+        });
+      } else {
+        alert("この端末は位置情報をサポートしていません。");
+      }
+    }
+  </script>
+</body>
+</html>
+
+function doPost(e) {
+  Logger.log(e.postData.contents); // ← ここがログ出力部分です！
+
+  const sheet = SpreadsheetApp.openById('スプレッドシートID').getSheetByName('打刻データ');
+  const data = JSON.parse(e.postData.contents);
+
+  sheet.appendRow([
+    new Date(), data.name, data.department, data.car,
+    data.type, data.timestamp, data.latitude, data.longitude
+  ]);
+
+  return ContentService.createTextOutput("Success");
+}
+
+const timestamp = Utilities.formatDate(new Date(), "Asia/Tokyo", "yyyy-MM-dd HH:mm:ss");
+
+
+function exportToExcel() {
+  const spreadsheet = SpreadsheetApp.openById("1krV0E-G6W5ehK7RaFldrcB4IESrT1dLrHdPZiIIVFoA");
+  const blob = spreadsheet.getBlob().getAs(MimeType.MICROSOFT_EXCEL);
+  const fileName = "打刻データ_" + Utilities.formatDate(new Date(), "Asia/Tokyo", "yyyyMMdd_HHmmss") + ".xlsx";
+
+  // Googleドライブに保存
+  const folder = DriveApp.getFolderById("https://docs.google.com/spreadsheets/d/14OvXM_2xk_fuHfAHThCAxR-k8M7a8-APEkAR6cWE7SY/edit?gid=411870891#gid=411870891"); // ※省略可、指定しなければ「マイドライブ」に保存
+  folder.createFile(blob).setName(fileName);
+}
+function exportAndEmailExcel() {
+  const spreadsheet = SpreadsheetApp.openById("あなたのスプレッドシートID");
+  const blob = spreadsheet.getBlob().getAs(MimeType.MICROSOFT_EXCEL);
+  const fileName = "打刻データ_" + Utilities.formatDate(new Date(), "Asia/Tokyo", "yyyyMMdd_HHmmss") + ".xlsx";
+
+  // メール送信
+  GmailApp.sendEmail("送信先メールアドレス", "打刻データのExcelファイル", "添付ファイルをご確認ください。", {
+    attachments: [blob.setName(fileName)]
+  });
+}
