@@ -159,7 +159,7 @@
 function doPost(e) {
   Logger.log(e.postData.contents); // ← ここがログ出力部分です！
 
-  const sheet = SpreadsheetApp.openById('スプレッドシートID').getSheetByName('打刻データ');
+  const sheet = SpreadsheetApp.openById('14OvXM_2xk_fuHfAHThCAxR-k8M7a8-APEkAR6cWE7SY').getSheetByName('打刻データ');
   const data = JSON.parse(e.postData.contents);
 
   sheet.appendRow([
